@@ -1,0 +1,291 @@
+-- MySQL Workbench Forward Engineering
+
+SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0;
+SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
+SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
+
+-- -----------------------------------------------------
+-- Schema Queimadas_Do_Brasil
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema Queimadas_Do_Brasil
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `Queimadas_Do_Brasil` DEFAULT CHARACTER SET utf8 ;
+-- -----------------------------------------------------
+-- Schema queimadas_do_brasil
+-- -----------------------------------------------------
+
+-- -----------------------------------------------------
+-- Schema queimadas_do_brasil
+-- -----------------------------------------------------
+CREATE SCHEMA IF NOT EXISTS `queimadas_do_brasil` DEFAULT CHARACTER SET utf8 ;
+USE `Queimadas_Do_Brasil` ;
+
+-- -----------------------------------------------------
+-- Table `Queimadas_Do_Brasil`.`unidade_de_conservacao`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Queimadas_Do_Brasil`.`unidade_de_conservacao` (
+  `cnuc` INT NOT NULL COMMENT 'CNUC \n\n\n',
+  `categoria_da_uc_sigla_federal` VARCHAR(255) NOT NULL,
+  `ano_da_queimada` CHAR(4) NOT NULL,
+  `area_estimada_da_uc (ha)` FLOAT NOT NULL,
+  `satelite` VARCHAR(45) NOT NULL,
+  `status` VARCHAR(45) NOT NULL COMMENT 'Para saber se há queimada ou n em determinada UC',
+  PRIMARY KEY (`cnuc`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Queimadas_Do_Brasil`.`bioma`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Queimadas_Do_Brasil`.`bioma` (
+  `id` INT NOT NULL COMMENT '\n',
+  `nome` VARCHAR(45) NOT NULL,
+  `descricao` TEXT(255) NOT NULL,
+  `aaf` VARCHAR(8) NOT NULL,
+  `categoria_da_uc_nomenclatura_nacional` VARCHAR(255) NOT NULL,
+  `tipo` CHAR(2) NOT NULL COMMENT 'terrestre ou marinho',
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Queimadas_Do_Brasil`.`localizacao`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Queimadas_Do_Brasil`.`localizacao` (
+  `cnuc` INT NOT NULL AUTO_INCREMENT COMMENT '\n',
+  `estado` VARCHAR(45) NOT NULL,
+  `municipio` VARCHAR(45) NOT NULL,
+  `latitude` VARCHAR(45) NOT NULL,
+  `longitude` VARCHAR(45) NOT NULL,
+  `bioma_cnuc` INT NOT NULL,
+  `bioma_unidade_de_conservacao_cnuc` INT NOT NULL,
+  PRIMARY KEY (`cnuc`, `bioma_cnuc`, `bioma_unidade_de_conservacao_cnuc`),
+  INDEX `fk_localizacao_bioma1_idx` (`bioma_cnuc` ASC, `bioma_unidade_de_conservacao_cnuc` ASC) VISIBLE,
+  CONSTRAINT `fk_localizacao_bioma1`
+    FOREIGN KEY (`bioma_cnuc`)
+    REFERENCES `Queimadas_Do_Brasil`.`bioma` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Queimadas_Do_Brasil`.`queimadas`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Queimadas_Do_Brasil`.`queimadas` (
+  `cnuc` INT NOT NULL AUTO_INCREMENT,
+  `sigla_dos_estados` CHAR(2) NOT NULL,
+  `area_queimada_em_2015` VARCHAR(45) NOT NULL,
+  `area_queimada_em_2016` VARCHAR(45) NOT NULL,
+  `area_queimada_em_2017` VARCHAR(45) NOT NULL,
+  `area_queimada_em_2018` VARCHAR(45) NOT NULL,
+  `area_queimada_em_2019` VARCHAR(45) NOT NULL,
+  `area_queimada_em_2020` VARCHAR(45) NOT NULL,
+  `localizacao_cnuc` INT NOT NULL,
+  `localizacao_bioma_cnuc` INT NOT NULL,
+  `localizacao_bioma_unidade_de_conservacao_cnuc` INT NOT NULL,
+  PRIMARY KEY (`cnuc`, `localizacao_cnuc`, `localizacao_bioma_cnuc`, `localizacao_bioma_unidade_de_conservacao_cnuc`),
+  INDEX `fk_queimadas_localizacao1_idx` (`localizacao_cnuc` ASC, `localizacao_bioma_cnuc` ASC, `localizacao_bioma_unidade_de_conservacao_cnuc` ASC) VISIBLE,
+  CONSTRAINT `fk_queimadas_localizacao1`
+    FOREIGN KEY (`localizacao_cnuc` , `localizacao_bioma_cnuc` , `localizacao_bioma_unidade_de_conservacao_cnuc`)
+    REFERENCES `Queimadas_Do_Brasil`.`localizacao` (`cnuc` , `bioma_cnuc` , `bioma_unidade_de_conservacao_cnuc`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Queimadas_Do_Brasil`.`relatorio`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Queimadas_Do_Brasil`.`relatorio` (
+  `cnuc_Relatório` INT NOT NULL COMMENT 'O Relatório mostrará os dados obtidos através de analises feitas neste banco de dados.',
+  `Imagem` VARCHAR(2555) NOT NULL,
+  `data` DATE NOT NULL,
+  `texto` TEXT(250) NOT NULL COMMENT 'Nos servirá para acrescentar informações acerca do B.I do projeto.',
+  PRIMARY KEY (`cnuc_Relatório`))
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Queimadas_Do_Brasil`.`relatorio_de_queimadas`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Queimadas_Do_Brasil`.`relatorio_de_queimadas` (
+  `relatorio_cnuc_Relatório` INT NOT NULL,
+  `queimadas_cnuc` INT NOT NULL,
+  `queimadas_localizacao_cnuc` INT NOT NULL,
+  `queimadas_localizacao_bioma_cnuc` INT NOT NULL,
+  `queimadas_localizacao_bioma_unidade_de_conservacao_cnuc` INT NOT NULL,
+  PRIMARY KEY (`relatorio_cnuc_Relatório`, `queimadas_cnuc`, `queimadas_localizacao_cnuc`, `queimadas_localizacao_bioma_cnuc`, `queimadas_localizacao_bioma_unidade_de_conservacao_cnuc`),
+  INDEX `fk_relatorio_has_queimadas_queimadas1_idx` (`queimadas_cnuc` ASC, `queimadas_localizacao_cnuc` ASC, `queimadas_localizacao_bioma_cnuc` ASC, `queimadas_localizacao_bioma_unidade_de_conservacao_cnuc` ASC) VISIBLE,
+  INDEX `fk_relatorio_has_queimadas_relatorio1_idx` (`relatorio_cnuc_Relatório` ASC) VISIBLE,
+  CONSTRAINT `fk_relatorio_has_queimadas_relatorio1`
+    FOREIGN KEY (`relatorio_cnuc_Relatório`)
+    REFERENCES `Queimadas_Do_Brasil`.`relatorio` (`cnuc_Relatório`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_relatorio_has_queimadas_queimadas1`
+    FOREIGN KEY (`queimadas_cnuc` , `queimadas_localizacao_cnuc` , `queimadas_localizacao_bioma_cnuc` , `queimadas_localizacao_bioma_unidade_de_conservacao_cnuc`)
+    REFERENCES `Queimadas_Do_Brasil`.`queimadas` (`cnuc` , `localizacao_cnuc` , `localizacao_bioma_cnuc` , `localizacao_bioma_unidade_de_conservacao_cnuc`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
+-- -----------------------------------------------------
+-- Table `Queimadas_Do_Brasil`.`bioma_has_unidade_de_conservacao`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `Queimadas_Do_Brasil`.`bioma_has_unidade_de_conservacao` (
+  `bioma_cnuc` INT NOT NULL,
+  `bioma_unidade_de_conservacao_cnuc` INT NOT NULL,
+  `unidade_de_conservacao_cnuc` INT NOT NULL,
+  PRIMARY KEY (`bioma_cnuc`, `bioma_unidade_de_conservacao_cnuc`, `unidade_de_conservacao_cnuc`),
+  INDEX `fk_bioma_has_unidade_de_conservacao_unidade_de_conservacao1_idx` (`unidade_de_conservacao_cnuc` ASC) VISIBLE,
+  INDEX `fk_bioma_has_unidade_de_conservacao_bioma1_idx` (`bioma_cnuc` ASC, `bioma_unidade_de_conservacao_cnuc` ASC) VISIBLE,
+  CONSTRAINT `fk_bioma_has_unidade_de_conservacao_bioma1`
+    FOREIGN KEY (`bioma_cnuc`)
+    REFERENCES `Queimadas_Do_Brasil`.`bioma` (`id`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_bioma_has_unidade_de_conservacao_unidade_de_conservacao1`
+    FOREIGN KEY (`unidade_de_conservacao_cnuc`)
+    REFERENCES `Queimadas_Do_Brasil`.`unidade_de_conservacao` (`cnuc`)
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+USE `queimadas_do_brasil` ;
+
+-- -----------------------------------------------------
+-- Table `queimadas_do_brasil`.`bioma`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `queimadas_do_brasil`.`bioma` (
+  `id` INT NOT NULL COMMENT '\\n',
+  `nome` VARCHAR(45) NOT NULL,
+  `descricao` TEXT NOT NULL,
+  `aaf` VARCHAR(8) NOT NULL,
+  `categoria_da_uc_nomenclatura_nacional` VARCHAR(255) NOT NULL,
+  `tipo` CHAR(2) NOT NULL COMMENT 'terrestre ou marinho',
+  PRIMARY KEY (`id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `queimadas_do_brasil`.`unidade_de_conservacao`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `queimadas_do_brasil`.`unidade_de_conservacao` (
+  `cnuc` INT NOT NULL COMMENT 'CNUC \\n\\n\\n',
+  `categoria_da_uc_sigla_federal` VARCHAR(255) NOT NULL,
+  `ano_da_queimada` CHAR(4) NOT NULL,
+  `area_estimada_da_uc (ha)` FLOAT NOT NULL,
+  `satelite` VARCHAR(45) NOT NULL,
+  `status` VARCHAR(45) NOT NULL COMMENT 'Para saber se há queimada ou n em determinada UC',
+  PRIMARY KEY (`cnuc`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `queimadas_do_brasil`.`bioma_has_unidade_de_conservacao`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `queimadas_do_brasil`.`bioma_has_unidade_de_conservacao` (
+  `bioma_cnuc` INT NOT NULL,
+  `bioma_unidade_de_conservacao_cnuc` INT NOT NULL,
+  `unidade_de_conservacao_cnuc` INT NOT NULL,
+  PRIMARY KEY (`bioma_cnuc`, `bioma_unidade_de_conservacao_cnuc`, `unidade_de_conservacao_cnuc`),
+  INDEX `fk_bioma_has_unidade_de_conservacao_unidade_de_conservacao1_idx` (`unidade_de_conservacao_cnuc` ASC) VISIBLE,
+  INDEX `fk_bioma_has_unidade_de_conservacao_bioma1_idx` (`bioma_cnuc` ASC, `bioma_unidade_de_conservacao_cnuc` ASC) VISIBLE,
+  CONSTRAINT `fk_bioma_has_unidade_de_conservacao_bioma1`
+    FOREIGN KEY (`bioma_cnuc`)
+    REFERENCES `queimadas_do_brasil`.`bioma` (`id`),
+  CONSTRAINT `fk_bioma_has_unidade_de_conservacao_unidade_de_conservacao1`
+    FOREIGN KEY (`unidade_de_conservacao_cnuc`)
+    REFERENCES `queimadas_do_brasil`.`unidade_de_conservacao` (`cnuc`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `queimadas_do_brasil`.`localizacao`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `queimadas_do_brasil`.`localizacao` (
+  `cnuc` INT NOT NULL AUTO_INCREMENT COMMENT '\\n',
+  `estado` VARCHAR(45) NOT NULL,
+  `municipio` VARCHAR(45) NOT NULL,
+  `latitude` VARCHAR(45) NOT NULL,
+  `longitude` VARCHAR(45) NOT NULL,
+  `bioma_cnuc` INT NOT NULL,
+  `bioma_unidade_de_conservacao_cnuc` INT NOT NULL,
+  PRIMARY KEY (`cnuc`, `bioma_cnuc`, `bioma_unidade_de_conservacao_cnuc`),
+  INDEX `fk_localizacao_bioma1_idx` (`bioma_cnuc` ASC, `bioma_unidade_de_conservacao_cnuc` ASC) VISIBLE,
+  CONSTRAINT `fk_localizacao_bioma1`
+    FOREIGN KEY (`bioma_cnuc`)
+    REFERENCES `queimadas_do_brasil`.`bioma` (`id`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `queimadas_do_brasil`.`queimadas`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `queimadas_do_brasil`.`queimadas` (
+  `cnuc` INT NOT NULL AUTO_INCREMENT,
+  `sigla_dos_estados` CHAR(2) NOT NULL,
+  `area_queimada_em_2015` VARCHAR(45) NOT NULL,
+  `area_queimada_em_2016` VARCHAR(45) NOT NULL,
+  `area_queimada_em_2017` VARCHAR(45) NOT NULL,
+  `area_queimada_em_2018` VARCHAR(45) NOT NULL,
+  `area_queimada_em_2019` VARCHAR(45) NOT NULL,
+  `area_queimada_em_2020` VARCHAR(45) NOT NULL,
+  `localizacao_cnuc` INT NOT NULL,
+  `localizacao_bioma_cnuc` INT NOT NULL,
+  `localizacao_bioma_unidade_de_conservacao_cnuc` INT NOT NULL,
+  PRIMARY KEY (`cnuc`, `localizacao_cnuc`, `localizacao_bioma_cnuc`, `localizacao_bioma_unidade_de_conservacao_cnuc`),
+  INDEX `fk_queimadas_localizacao1_idx` (`localizacao_cnuc` ASC, `localizacao_bioma_cnuc` ASC, `localizacao_bioma_unidade_de_conservacao_cnuc` ASC) VISIBLE,
+  CONSTRAINT `fk_queimadas_localizacao1`
+    FOREIGN KEY (`localizacao_cnuc` , `localizacao_bioma_cnuc` , `localizacao_bioma_unidade_de_conservacao_cnuc`)
+    REFERENCES `queimadas_do_brasil`.`localizacao` (`cnuc` , `bioma_cnuc` , `bioma_unidade_de_conservacao_cnuc`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `queimadas_do_brasil`.`relatorio`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `queimadas_do_brasil`.`relatorio` (
+  `cnuc_Relatório` INT NOT NULL COMMENT 'O Relatório mostrará os dados obtidos através de analises feitas neste banco de dados.',
+  `Imagem` VARCHAR(2555) NOT NULL,
+  `data` DATE NOT NULL,
+  `texto` TEXT NOT NULL COMMENT 'Nos servirá para acrescentar informações acerca do B.I do projeto.',
+  PRIMARY KEY (`cnuc_Relatório`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+-- -----------------------------------------------------
+-- Table `queimadas_do_brasil`.`relatorio_de_queimadas`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `queimadas_do_brasil`.`relatorio_de_queimadas` (
+  `relatorio_cnuc_Relatório` INT NOT NULL,
+  `queimadas_cnuc` INT NOT NULL,
+  `queimadas_localizacao_cnuc` INT NOT NULL,
+  `queimadas_localizacao_bioma_cnuc` INT NOT NULL,
+  `queimadas_localizacao_bioma_unidade_de_conservacao_cnuc` INT NOT NULL,
+  PRIMARY KEY (`relatorio_cnuc_Relatório`, `queimadas_cnuc`, `queimadas_localizacao_cnuc`, `queimadas_localizacao_bioma_cnuc`, `queimadas_localizacao_bioma_unidade_de_conservacao_cnuc`),
+  INDEX `fk_relatorio_has_queimadas_queimadas1_idx` (`queimadas_cnuc` ASC, `queimadas_localizacao_cnuc` ASC, `queimadas_localizacao_bioma_cnuc` ASC, `queimadas_localizacao_bioma_unidade_de_conservacao_cnuc` ASC) VISIBLE,
+  INDEX `fk_relatorio_has_queimadas_relatorio1_idx` (`relatorio_cnuc_Relatório` ASC) VISIBLE,
+  CONSTRAINT `fk_relatorio_has_queimadas_queimadas1`
+    FOREIGN KEY (`queimadas_cnuc` , `queimadas_localizacao_cnuc` , `queimadas_localizacao_bioma_cnuc` , `queimadas_localizacao_bioma_unidade_de_conservacao_cnuc`)
+    REFERENCES `queimadas_do_brasil`.`queimadas` (`cnuc` , `localizacao_cnuc` , `localizacao_bioma_cnuc` , `localizacao_bioma_unidade_de_conservacao_cnuc`),
+  CONSTRAINT `fk_relatorio_has_queimadas_relatorio1`
+    FOREIGN KEY (`relatorio_cnuc_Relatório`)
+    REFERENCES `queimadas_do_brasil`.`relatorio` (`cnuc_Relatório`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
+
+
+SET SQL_MODE=@OLD_SQL_MODE;
+SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
+SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
